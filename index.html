@@ -1,0 +1,543 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Flask-PyMongo &mdash; Flask-PyMongo 0.3.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Flask-PyMongo 0.3.0 documentation" href="#" /> 
+  </head>
+  <body>
+  
+  
+  <div class=indexwrapper>
+  
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="flask-pymongo">
+<h1>Flask-PyMongo<a class="headerlink" href="#flask-pymongo" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="http://www.mongodb.org/">MongoDB</a> 是一个开源的数据库，它存储着灵活的类-JSON 的“文档”。与关系数据库中的数据行相反，它能够存储任何的数字，名称，或者复杂的层级结构。Python 开发者可以考虑把 MongoDB 作为一个持久化，可搜索的 Python 字典的“仓库”(实际上，这是如何用 <a class="reference external" href="http://api.mongodb.org/python/current/">PyMongo</a> 来表示 MongoDB 中的“文档”)。</p>
+<p>Flask-PyMongo 架起来 Flask 和 PyMongo 之间的桥梁，因此你能够使用 Flask 正常的机制去配置和连接 MongoDB。</p>
+<div class="section" id="id1">
+<h2>快速入门<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>首先，安装 Flask-PyMongo:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>pip install Flask-PyMongo
+</pre></div>
+</div>
+<p>Flask-PyMongo 的各种依赖(比如，最近的 Flask 以及 PyMongo )也会为你安装的。Flask-PyMongo 是兼容 Python 2.6, 2.7, 和 3.3 版本并且通过测试。</p>
+<p>接着，在你的代码中添加一个 <a class="reference internal" href="#flask_pymongo.PyMongo" title="flask_pymongo.PyMongo"><tt class="xref py py-class docutils literal"><span class="pre">PyMongo</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span>
+<span class="kn">from</span> <span class="nn">flask.ext.pymongo</span> <span class="kn">import</span> <span class="n">PyMongo</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<span class="n">mongo</span> <span class="o">=</span> <span class="n">PyMongo</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#flask_pymongo.PyMongo" title="flask_pymongo.PyMongo"><tt class="xref py py-class docutils literal"><span class="pre">PyMongo</span></tt></a> 连接运行在本机上且端口为 27017 的 MongoDB 服务器，并且假设默认的数据库名为 <tt class="docutils literal"><span class="pre">app.name</span></tt>
+(换而言之，你可以使用传入到 <a class="reference external" href="http://flask.pocoo.org/docs/api/#flask.Flask" title="(in Flask v0.10)"><tt class="xref py py-class docutils literal"><span class="pre">Flask</span></tt></a> 中的任何数据库名)。这个数据库能够作为 <a class="reference internal" href="#flask_pymongo.PyMongo.db" title="flask_pymongo.PyMongo.db"><tt class="xref py py-attr docutils literal"><span class="pre">db</span></tt></a> 属性被导入。</p>
+<p>你可以在视图中直接使用 <a class="reference internal" href="#flask_pymongo.PyMongo.db" title="flask_pymongo.PyMongo.db"><tt class="xref py py-attr docutils literal"><span class="pre">db</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">home_page</span><span class="p">():</span>
+    <span class="n">online_users</span> <span class="o">=</span> <span class="n">mongo</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">find</span><span class="p">({</span><span class="s">&#39;online&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s">&#39;index.html&#39;</span><span class="p">,</span>
+        <span class="n">online_users</span><span class="o">=</span><span class="n">online_users</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="helpers">
+<h2>Helpers<a class="headerlink" href="#helpers" title="Permalink to this headline">¶</a></h2>
+<p>Flask-PyMongo 提供一些通用任务的现成方法：</p>
+<dl class="method">
+<dt id="flask_pymongo.wrappers.Collection.find_one_or_404">
+<tt class="descclassname">Collection.</tt><tt class="descname">find_one_or_404</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#flask_pymongo.wrappers.Collection.find_one_or_404" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find and return a single document, or raise a 404 Not Found
+exception if no document matches the query spec. See
+<a class="reference external" href="http://api.mongodb.org/python/current/api/pymongo/collection.html#pymongo.collection.Collection.find_one" title="(in PyMongo v2.6.2)"><tt class="xref py py-meth docutils literal"><span class="pre">find_one()</span></tt></a> for details.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/user/&lt;username&gt;&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">user_profile</span><span class="p">(</span><span class="n">username</span><span class="p">):</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">mongo</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">find_one_or_404</span><span class="p">({</span><span class="s">&#39;_id&#39;</span><span class="p">:</span> <span class="n">username</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s">&#39;user.html&#39;</span><span class="p">,</span>
+        <span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="flask_pymongo.PyMongo.send_file">
+<tt class="descclassname">PyMongo.</tt><tt class="descname">send_file</tt><big>(</big><em>filename</em>, <em>base='fs'</em>, <em>version=-1</em>, <em>cache_for=31536000</em><big>)</big><a class="headerlink" href="#flask_pymongo.PyMongo.send_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an instance of the <a class="reference external" href="http://flask.pocoo.org/docs/api/#flask.Flask.response_class" title="(in Flask v0.10)"><tt class="xref py py-attr docutils literal"><span class="pre">response_class</span></tt></a>
+containing the named file, and implement conditional GET semantics
+(using <tt class="xref py py-meth docutils literal"><span class="pre">make_conditional()</span></tt>).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/uploads/&lt;path:filename&gt;&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_upload</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">mongo</span><span class="o">.</span><span class="n">send_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; the filename of the file to return</li>
+<li><strong>base</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; the base name of the GridFS collections to use</li>
+<li><strong>version</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; if positive, return the Nth revision of the file
+identified by filename; if negative, return the Nth most recent
+revision. If no such version exists, return with HTTP status 404.</li>
+<li><strong>cache_for</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; number of seconds that browsers should be
+instructed to cache responses</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="flask_pymongo.PyMongo.save_file">
+<tt class="descclassname">PyMongo.</tt><tt class="descname">save_file</tt><big>(</big><em>filename</em>, <em>fileobj</em>, <em>base='fs'</em>, <em>content_type=None</em><big>)</big><a class="headerlink" href="#flask_pymongo.PyMongo.save_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the file-like object to GridFS using the given filename.
+Returns <tt class="docutils literal"><span class="pre">None</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/uploads/&lt;path:filename&gt;&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;POST&#39;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">save_upload</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="n">mongo</span><span class="o">.</span><span class="n">save_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="s">&#39;file&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s">&#39;get_upload&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">))</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; the filename of the file to return</li>
+<li><strong>fileobj</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#file" title="(in Python v2.7)"><em>file</em></a>) &#8211; the file-like object to save</li>
+<li><strong>base</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; base the base name of the GridFS collections to use</li>
+<li><strong>content_type</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; the MIME content-type of the file. If
+<tt class="docutils literal"><span class="pre">None</span></tt>, the content-type is guessed from the filename using
+<a class="reference external" href="http://docs.python.org/library/mimetypes.html#mimetypes.guess_type" title="(in Python v2.7)"><tt class="xref py py-func docutils literal"><span class="pre">guess_type()</span></tt></a></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="flask_pymongo.BSONObjectIdConverter">
+<em class="property">class </em><tt class="descclassname">flask_pymongo.</tt><tt class="descname">BSONObjectIdConverter</tt><big>(</big><em>map</em><big>)</big><a class="headerlink" href="#flask_pymongo.BSONObjectIdConverter" title="Permalink to this definition">¶</a></dt>
+<dd><p>A simple converter for the RESTful URL routing system of Flask.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/&lt;ObjectId:task_id&gt;&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">show_task</span><span class="p">(</span><span class="n">task_id</span><span class="p">):</span>
+    <span class="n">task</span> <span class="o">=</span> <span class="n">mongo</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">find_one_or_404</span><span class="p">(</span><span class="n">task_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s">&#39;task.html&#39;</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Valid object ID strings are converted into
+<a class="reference external" href="http://api.mongodb.org/python/current/api/bson/objectid.html#bson.objectid.ObjectId" title="(in PyMongo v2.6.2)"><tt class="xref py py-class docutils literal"><span class="pre">ObjectId</span></tt></a> objects; invalid strings result
+in a 404 error. The converter is automatically registered by the
+initialization of <a class="reference internal" href="#flask_pymongo.PyMongo" title="flask_pymongo.PyMongo"><tt class="xref py py-class docutils literal"><span class="pre">PyMongo</span></tt></a> with keyword
+<tt class="xref py py-attr docutils literal"><span class="pre">ObjectId</span></tt>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id2">
+<h2>配置<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="#flask_pymongo.PyMongo" title="flask_pymongo.PyMongo"><tt class="xref py py-class docutils literal"><span class="pre">PyMongo</span></tt></a> 直接支持如下的配置项：</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="77%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">MONGO_URI</span></tt></td>
+<td>一个 <a class="reference external" href="http://www.mongodb.org/display/DOCS/Connections#Connections-StandardConnectionStringFormat">MongoDB 网址</a>
+用于其他配置项。</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">MONGO_HOST</span></tt></td>
+<td>你的 MongoDB 服务器的主机名或者 IP 地址。
+默认：&#8221;localhost&#8221;。</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">MONGO_PORT</span></tt></td>
+<td>你的 MongoDB 服务器的端口。默认：27017。</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">MONGO_AUTO_START_REQUEST</span></tt></td>
+<td>设置成 <tt class="docutils literal"><span class="pre">False</span></tt> 为了禁用 PyMongo 2.2 的 &#8220;auto
+start request&#8221; 行为 (请见
+<a class="reference external" href="http://api.mongodb.org/python/current/api/pymongo/mongo_client.html#pymongo.mongo_client.MongoClient" title="(in PyMongo v2.6.2)"><tt class="xref py py-class docutils literal"><span class="pre">MongoClient</span></tt></a>)。
+默认：<tt class="docutils literal"><span class="pre">True</span></tt>。</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">MONGO_MAX_POOL_SIZE</span></tt></td>
+<td>(可选): PyMongo 连接池中保持空闲连接的最大数量。
+默认：PyMongo 默认值。</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">MONGO_SOCKET_TIMEOUT_MS</span></tt></td>
+<td>(可选): (整型) 在超时前套接字允许一个发送或者接收的耗时(毫秒)。
+默认: PyMongo 默认值。</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">MONGO_CONNECT_TIMEOUT_MS</span></tt></td>
+<td>(可选): (整型) 在超时前允许一个连接的耗时(毫秒)。
+默认: PyMongo 默认值。</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">MONGO_DBNAME</span></tt></td>
+<td>可用于作为 <tt class="docutils literal"><span class="pre">db</span></tt> 属性的数据库名。默认： <tt class="docutils literal"><span class="pre">app.name</span></tt>。</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">MONGO_USERNAME</span></tt></td>
+<td>用于认证的用户名。默认：<tt class="docutils literal"><span class="pre">None</span></tt>。</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">MONGO_PASSWORD</span></tt></td>
+<td>用于认证的密码。默认： <tt class="docutils literal"><span class="pre">None</span></tt>。</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">MONGO_REPLICA_SET</span></tt></td>
+<td>设置成连接的备份集的名称；这必须匹配到备份集的内部名，由 <a class="reference external" href="http://www.mongodb.org/display/DOCS/Replica+Set+Commands#ReplicaSetCommands-isMaster">isMaster</a>
+命令)决定的。默认：<tt class="docutils literal"><span class="pre">None</span></tt>。</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">MONGO_READ_PREFERENCE</span></tt></td>
+<td>决定如何读取路由到备份集的成员。必须是定义在
+<a class="reference external" href="http://api.mongodb.org/python/current/api/pymongo/index.html#pymongo.read_preferences.ReadPreference" title="(in PyMongo v2.6.2)"><tt class="xref py py-class docutils literal"><span class="pre">pymongo.read_preferences.ReadPreference</span></tt></a> 中的一个常量
+或者一个字符串名称。</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">MONGO_DOCUMENT_CLASS</span></tt></td>
+<td>告诉 pymongo 返回定制的对象而不是默认的字典，比如 <tt class="docutils literal"><span class="pre">bson.son.SON</span></tt>。
+默认： <tt class="docutils literal"><span class="pre">dict</span></tt>。</td>
+</tr>
+</tbody>
+</table>
+<p>当 <a class="reference internal" href="#flask_pymongo.PyMongo" title="flask_pymongo.PyMongo"><tt class="xref py py-class docutils literal"><span class="pre">PyMongo</span></tt></a> 或者
+<a class="reference internal" href="#flask_pymongo.PyMongo.init_app" title="flask_pymongo.PyMongo.init_app"><tt class="xref py py-meth docutils literal"><span class="pre">init_app()</span></tt></a> 仅仅只有一个参数调用的时候
+(the <a class="reference external" href="http://flask.pocoo.org/docs/api/#flask.Flask" title="(in Flask v0.10)"><tt class="xref py py-class docutils literal"><span class="pre">Flask</span></tt></a> 实例)，会假设配置值的前缀是
+<tt class="docutils literal"><span class="pre">MONGO</span></tt>；能够用 <cite>config_prefix</cite> 来覆盖这个前缀。</p>
+<p>这个技术能够用于连接多个数据库或者数据服务器：</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+<span class="c"># connect to MongoDB with the defaults</span>
+<span class="n">mongo1</span> <span class="o">=</span> <span class="n">PyMongo</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+
+<span class="c"># connect to another MongoDB database on the same host</span>
+<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;MONGO2_DBNAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;dbname_two&#39;</span>
+<span class="n">mongo2</span> <span class="o">=</span> <span class="n">PyMongo</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">config_prefix</span><span class="o">=</span><span class="s">&#39;MONGO2&#39;</span><span class="p">)</span>
+
+<span class="c"># connect to another MongoDB server altogether</span>
+<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;MONGO3_HOST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;another.host.example.com&#39;</span>
+<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;MONGO3_PORT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">27017</span>
+<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;MONGO3_DBNAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;dbname_three&#39;</span>
+<span class="n">mongo3</span> <span class="o">=</span> <span class="n">PyMongo</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">config_prefix</span><span class="o">=</span><span class="s">&#39;MONGO3&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>你应该需要注意一些自动配置的设置：</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">tz_aware</span></tt>:</dt>
+<dd>Flask-PyMongo 一直使用通用时区的 <a class="reference external" href="http://docs.python.org/library/datetime.html#datetime.datetime" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">datetime</span></tt></a> 对象。这是因为当建立连接的时候它设置
+<tt class="docutils literal"><span class="pre">tz_aware</span></tt> 参数为 <tt class="docutils literal"><span class="pre">True</span></tt>。从 MongoDB 返回的 <a class="reference external" href="http://docs.python.org/library/datetime.html#datetime.datetime" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">datetime</span></tt></a> 对象一直是 UTC。</dd>
+<dt><tt class="docutils literal"><span class="pre">safe</span></tt>:</dt>
+<dd>Flask-PyMongo 默认地设置成 &#8220;safe&#8221; 模式，这会导致
+<a class="reference external" href="http://api.mongodb.org/python/current/api/pymongo/collection.html#pymongo.collection.Collection.save" title="(in PyMongo v2.6.2)"><tt class="xref py py-meth docutils literal"><span class="pre">save()</span></tt></a>,
+<a class="reference external" href="http://api.mongodb.org/python/current/api/pymongo/collection.html#pymongo.collection.Collection.insert" title="(in PyMongo v2.6.2)"><tt class="xref py py-meth docutils literal"><span class="pre">insert()</span></tt></a>,
+<a class="reference external" href="http://api.mongodb.org/python/current/api/pymongo/collection.html#pymongo.collection.Collection.update" title="(in PyMongo v2.6.2)"><tt class="xref py py-meth docutils literal"><span class="pre">update()</span></tt></a>, 和
+<a class="reference external" href="http://api.mongodb.org/python/current/api/pymongo/collection.html#pymongo.collection.Collection.remove" title="(in PyMongo v2.6.2)"><tt class="xref py py-meth docutils literal"><span class="pre">remove()</span></tt></a> 在返回前一直等待着服务器的应答。你可以在调用的时候通过传入 <tt class="docutils literal"><span class="pre">safe=False</span></tt> 参数到任何一个受影响的方法中来覆盖它。</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="api">
+<h1>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id4">
+<h2>常量<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<dl class="data">
+<dt id="flask_pymongo.ASCENDING">
+<tt class="descclassname">flask_pymongo.</tt><tt class="descname">ASCENDING</tt><em class="property"> = 1</em><a class="headerlink" href="#flask_pymongo.ASCENDING" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ascending sort order.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="flask_pymongo.DESCENDING">
+<tt class="descclassname">flask_pymongo.</tt><tt class="descname">DESCENDING</tt><em class="property"> = -1</em><a class="headerlink" href="#flask_pymongo.DESCENDING" title="Permalink to this definition">¶</a></dt>
+<dd><p>Descending sort order.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id5">
+<h2>类<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="flask_pymongo.PyMongo">
+<em class="property">class </em><tt class="descclassname">flask_pymongo.</tt><tt class="descname">PyMongo</tt><big>(</big><em>app=None</em>, <em>config_prefix='MONGO'</em><big>)</big><a class="headerlink" href="#flask_pymongo.PyMongo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Automatically connects to MongoDB using parameters defined in Flask
+configuration.</p>
+<dl class="attribute">
+<dt id="flask_pymongo.PyMongo.cx">
+<tt class="descname">cx</tt><a class="headerlink" href="#flask_pymongo.PyMongo.cx" title="Permalink to this definition">¶</a></dt>
+<dd><p>The automatically created
+<tt class="xref py py-class docutils literal"><span class="pre">Connection</span></tt> or
+<tt class="xref py py-class docutils literal"><span class="pre">ReplicaSetConnection</span></tt>
+object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="flask_pymongo.PyMongo.db">
+<tt class="descname">db</tt><a class="headerlink" href="#flask_pymongo.PyMongo.db" title="Permalink to this definition">¶</a></dt>
+<dd><p>The automatically created
+<a class="reference internal" href="#flask_pymongo.wrappers.Database" title="flask_pymongo.wrappers.Database"><tt class="xref py py-class docutils literal"><span class="pre">Database</span></tt></a> object
+corresponding to the provided <tt class="docutils literal"><span class="pre">MONGO_DBNAME</span></tt> configuration
+parameter.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="flask_pymongo.PyMongo.init_app">
+<tt class="descname">init_app</tt><big>(</big><em>app</em>, <em>config_prefix='MONGO'</em><big>)</big><a class="headerlink" href="#flask_pymongo.PyMongo.init_app" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the <cite>app</cite> for use with this <tt class="xref py py-class docutils literal"><span class="pre">PyMongo</span></tt>. This is
+called automatically if <cite>app</cite> is passed to <tt class="xref py py-meth docutils literal"><span class="pre">__init__()</span></tt>.</p>
+<p>The app is configured according to the configuration variables
+<tt class="docutils literal"><span class="pre">PREFIX_HOST</span></tt>, <tt class="docutils literal"><span class="pre">PREFIX_PORT</span></tt>, <tt class="docutils literal"><span class="pre">PREFIX_DBNAME</span></tt>,
+<tt class="docutils literal"><span class="pre">PREFIX_AUTO_START_REQUEST</span></tt>,
+<tt class="docutils literal"><span class="pre">PREFIX_REPLICA_SET</span></tt>, <tt class="docutils literal"><span class="pre">PREFIX_READ_PREFERENCE</span></tt>,
+<tt class="docutils literal"><span class="pre">PREFIX_USERNAME</span></tt>, <tt class="docutils literal"><span class="pre">PREFIX_PASSWORD</span></tt>, and <tt class="docutils literal"><span class="pre">PREFIX_URI</span></tt> where
+&#8220;PREFIX&#8221; defaults to &#8220;MONGO&#8221;. If <tt class="docutils literal"><span class="pre">PREFIX_URL</span></tt> is set, it is
+assumed to have all appropriate configurations, and the other
+keys are overwritten using their values as present in the URI.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>app</strong> (<a class="reference external" href="http://flask.pocoo.org/docs/api/#flask.Flask" title="(in Flask v0.10)"><em>flask.Flask</em></a>) &#8211; the application to configure for use with
+this <tt class="xref py py-class docutils literal"><span class="pre">PyMongo</span></tt></li>
+<li><strong>config_prefix</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; determines the set of configuration
+variables used to configure this <tt class="xref py py-class docutils literal"><span class="pre">PyMongo</span></tt></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">save_file</tt><big>(</big><em>filename</em>, <em>fileobj</em>, <em>base='fs'</em>, <em>content_type=None</em><big>)</big></dt>
+<dd><p>Save the file-like object to GridFS using the given filename.
+Returns <tt class="docutils literal"><span class="pre">None</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/uploads/&lt;path:filename&gt;&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;POST&#39;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">save_upload</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="n">mongo</span><span class="o">.</span><span class="n">save_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="s">&#39;file&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s">&#39;get_upload&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">))</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; the filename of the file to return</li>
+<li><strong>fileobj</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#file" title="(in Python v2.7)"><em>file</em></a>) &#8211; the file-like object to save</li>
+<li><strong>base</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; base the base name of the GridFS collections to use</li>
+<li><strong>content_type</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; the MIME content-type of the file. If
+<tt class="docutils literal"><span class="pre">None</span></tt>, the content-type is guessed from the filename using
+<a class="reference external" href="http://docs.python.org/library/mimetypes.html#mimetypes.guess_type" title="(in Python v2.7)"><tt class="xref py py-func docutils literal"><span class="pre">guess_type()</span></tt></a></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">send_file</tt><big>(</big><em>filename</em>, <em>base='fs'</em>, <em>version=-1</em>, <em>cache_for=31536000</em><big>)</big></dt>
+<dd><p>Return an instance of the <a class="reference external" href="http://flask.pocoo.org/docs/api/#flask.Flask.response_class" title="(in Flask v0.10)"><tt class="xref py py-attr docutils literal"><span class="pre">response_class</span></tt></a>
+containing the named file, and implement conditional GET semantics
+(using <tt class="xref py py-meth docutils literal"><span class="pre">make_conditional()</span></tt>).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/uploads/&lt;path:filename&gt;&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_upload</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">mongo</span><span class="o">.</span><span class="n">send_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; the filename of the file to return</li>
+<li><strong>base</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; the base name of the GridFS collections to use</li>
+<li><strong>version</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; if positive, return the Nth revision of the file
+identified by filename; if negative, return the Nth most recent
+revision. If no such version exists, return with HTTP status 404.</li>
+<li><strong>cache_for</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; number of seconds that browsers should be
+instructed to cache responses</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="flask_pymongo.wrappers.Collection">
+<em class="property">class </em><tt class="descclassname">flask_pymongo.wrappers.</tt><tt class="descname">Collection</tt><big>(</big><em>database</em>, <em>name</em>, <em>create=False</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#flask_pymongo.wrappers.Collection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom sub-class of <a class="reference external" href="http://api.mongodb.org/python/current/api/pymongo/collection.html#pymongo.collection.Collection" title="(in PyMongo v2.6.2)"><tt class="xref py py-class docutils literal"><span class="pre">pymongo.collection.Collection</span></tt></a> which
+adds Flask-specific helper methods.</p>
+<dl class="method">
+<dt>
+<tt class="descname">find_one_or_404</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big></dt>
+<dd><p>Find and return a single document, or raise a 404 Not Found
+exception if no document matches the query spec. See
+<a class="reference external" href="http://api.mongodb.org/python/current/api/pymongo/collection.html#pymongo.collection.Collection.find_one" title="(in PyMongo v2.6.2)"><tt class="xref py py-meth docutils literal"><span class="pre">find_one()</span></tt></a> for details.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/user/&lt;username&gt;&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">user_profile</span><span class="p">(</span><span class="n">username</span><span class="p">):</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">mongo</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">find_one_or_404</span><span class="p">({</span><span class="s">&#39;_id&#39;</span><span class="p">:</span> <span class="n">username</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s">&#39;user.html&#39;</span><span class="p">,</span>
+        <span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="id6">
+<h2>封装<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+<p>这些类的存在只是为了使得表达式比如 <tt class="docutils literal"><span class="pre">mongo.db.foo.bar</span></tt> 等于一个 <a class="reference internal" href="#flask_pymongo.wrappers.Collection" title="flask_pymongo.wrappers.Collection"><tt class="xref py py-class docutils literal"><span class="pre">Collection</span></tt></a> 实例而不用直接使用一个 <a class="reference external" href="http://api.mongodb.org/python/current/api/pymongo/collection.html#pymongo.collection.Collection" title="(in PyMongo v2.6.2)"><tt class="xref py py-class docutils literal"><span class="pre">pymongo.collection.Collection</span></tt></a> 实例。它们完整的记录在如下:</p>
+<dl class="class">
+<dt id="flask_pymongo.wrappers.MongoClient">
+<em class="property">class </em><tt class="descclassname">flask_pymongo.wrappers.</tt><tt class="descname">MongoClient</tt><big>(</big><em>host=None</em>, <em>port=None</em>, <em>max_pool_size=100</em>, <em>document_class=&lt;type 'dict'&gt;</em>, <em>tz_aware=False</em>, <em>_connect=True</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#flask_pymongo.wrappers.MongoClient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns instances of <a class="reference internal" href="#flask_pymongo.wrappers.Database" title="flask_pymongo.wrappers.Database"><tt class="xref py py-class docutils literal"><span class="pre">flask_pymongo.wrappers.Database</span></tt></a> instead
+of <a class="reference external" href="http://api.mongodb.org/python/current/api/pymongo/database.html#pymongo.database.Database" title="(in PyMongo v2.6.2)"><tt class="xref py py-class docutils literal"><span class="pre">pymongo.database.Database</span></tt></a> when accessed with dot notation.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="flask_pymongo.wrappers.MongoReplicaSetClient">
+<em class="property">class </em><tt class="descclassname">flask_pymongo.wrappers.</tt><tt class="descname">MongoReplicaSetClient</tt><big>(</big><em>hosts_or_uri=None</em>, <em>max_pool_size=100</em>, <em>document_class=&lt;type 'dict'&gt;</em>, <em>tz_aware=False</em>, <em>_connect=True</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#flask_pymongo.wrappers.MongoReplicaSetClient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns instances of <a class="reference internal" href="#flask_pymongo.wrappers.Database" title="flask_pymongo.wrappers.Database"><tt class="xref py py-class docutils literal"><span class="pre">flask_pymongo.wrappers.Database</span></tt></a>
+instead of <a class="reference external" href="http://api.mongodb.org/python/current/api/pymongo/database.html#pymongo.database.Database" title="(in PyMongo v2.6.2)"><tt class="xref py py-class docutils literal"><span class="pre">pymongo.database.Database</span></tt></a> when accessed with dot
+notation.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="flask_pymongo.wrappers.Database">
+<em class="property">class </em><tt class="descclassname">flask_pymongo.wrappers.</tt><tt class="descname">Database</tt><big>(</big><em>connection</em>, <em>name</em><big>)</big><a class="headerlink" href="#flask_pymongo.wrappers.Database" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns instances of <a class="reference internal" href="#flask_pymongo.wrappers.Collection" title="flask_pymongo.wrappers.Collection"><tt class="xref py py-class docutils literal"><span class="pre">flask_pymongo.wrappers.Collection</span></tt></a>
+instead of <a class="reference external" href="http://api.mongodb.org/python/current/api/pymongo/collection.html#pymongo.collection.Collection" title="(in PyMongo v2.6.2)"><tt class="xref py py-class docutils literal"><span class="pre">pymongo.collection.Collection</span></tt></a> when accessed with dot
+notation.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id7">
+<h2>历史和贡献<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
+<p>变更:</p>
+<ul class="simple">
+<li>0.3.0: July 4, 2013<ul>
+<li>This is a minor version bump which introduces backwards breaking
+changes! Please read these change notes carefully.</li>
+<li>Removed read preference constants from Flask-PyMongo; to set a
+read preference, use the string name or import contants directly
+from <a class="reference external" href="http://api.mongodb.org/python/current/api/pymongo/index.html#pymongo.read_preferences.ReadPreference" title="(in PyMongo v2.6.2)"><tt class="xref py py-class docutils literal"><span class="pre">pymongo.read_preferences.ReadPreference</span></tt></a>.</li>
+<li><a class="reference external" href="https://github.com/dcrosta/flask-pymongo/pull/22">#22 (partial)</a>
+Add support for <tt class="docutils literal"><span class="pre">MONGO_SOCKET_TIMEOUT_MS</span></tt> and
+<tt class="docutils literal"><span class="pre">MONGO_CONNECT_TIMEOUT_MS</span></tt> options (ultrabug).</li>
+<li><a class="reference external" href="https://github.com/dcrosta/flask-pymongo/pull/27">#27 (partial)</a>
+Make Flask-PyMongo compatible with Python 3 (Vizzy).</li>
+</ul>
+</li>
+<li>0.2.1: December 22, 2012<ul>
+<li><a class="reference external" href="https://github.com/dcrosta/flask-pymongo/pull/19">#19</a> Added
+<tt class="docutils literal"><span class="pre">MONGO_DOCUMENT_CLASS</span></tt> config option (jeverling).</li>
+</ul>
+</li>
+<li>0.2.0: December 15, 2012<ul>
+<li>This is a minor version bump which may introduce backwards breaking
+changes! Please read these change notes carefully.</li>
+<li><a class="reference external" href="https://github.com/dcrosta/flask-pymongo/pull/17">#17</a> Now using
+PyMongo 2.4&#8217;s <tt class="docutils literal"><span class="pre">MongoClient</span></tt> and <tt class="docutils literal"><span class="pre">MongoReplicaSetClient</span></tt> objects
+instead of <tt class="docutils literal"><span class="pre">Connection</span></tt> and <tt class="docutils literal"><span class="pre">ReplicaSetConnection</span></tt> classes
+(tang0th).</li>
+<li><a class="reference external" href="https://github.com/dcrosta/flask-pymongo/pull/17">#17</a> Now requiring
+at least PyMongo version 2.4 (tang0th).</li>
+<li><a class="reference external" href="https://github.com/dcrosta/flask-pymongo/pull/17">#17</a> The wrapper
+class <tt class="docutils literal"><span class="pre">flask_pymongo.wrappers.Connection</span></tt> is renamed to
+<tt class="docutils literal"><span class="pre">flask_pymongo.wrappers.MongoClient</span></tt> (tang0th).</li>
+<li><a class="reference external" href="https://github.com/dcrosta/flask-pymongo/pull/17">#17</a> The wrapper
+class <tt class="docutils literal"><span class="pre">flask_pymongo.wrappers.ReplicaSetConnection</span></tt> is renamed to
+<tt class="docutils literal"><span class="pre">flask_pymongo.wrappers.MongoReplicaSetClient</span></tt> (tang0th).</li>
+<li><a class="reference external" href="https://github.com/dcrosta/flask-pymongo/issues/18">#18</a>
+<tt class="docutils literal"><span class="pre">MONGO_AUTO_START_REQUEST</span></tt> now defaults to <tt class="docutils literal"><span class="pre">False</span></tt> when
+connecting using a URI.</li>
+</ul>
+</li>
+<li>0.1.4: December 15, 2012<ul>
+<li><a class="reference external" href="https://github.com/dcrosta/flask-pymongo/pull/15">#15</a> Added support
+for <tt class="docutils literal"><span class="pre">MONGO_MAX_POOL_SIZE</span></tt> (Fabrice Aneche)</li>
+</ul>
+</li>
+<li>0.1.3: September 22, 2012<ul>
+<li>Added support for configuration from MongoDB URI.</li>
+</ul>
+</li>
+<li>0.1.2: June 18, 2012<ul>
+<li>Updated wiki example application</li>
+<li><a class="reference external" href="https://github.com/dcrosta/flask-pymongo/issues/14">#14</a> Added
+examples and docs to PyPI package.</li>
+</ul>
+</li>
+<li>0.1.1: May 26, 2012<ul>
+<li>Added support for PyMongo 2.2&#8217;s &#8220;auto start request&#8221; feature, by way
+of the <tt class="docutils literal"><span class="pre">MONGO_AUTO_START_REQUEST</span></tt> configuration flag.</li>
+<li><a class="reference external" href="https://github.com/dcrosta/flask-pymongo/pull/13">#13</a> Added
+BSONObjectIdConverter (Christoph Herr)</li>
+<li><a class="reference external" href="https://github.com/dcrosta/flask-pymongo/pull/12">#12</a> Corrected
+documentation typo (Thor Adam)</li>
+</ul>
+</li>
+<li>0.1: December 21, 2011<ul>
+<li>Initial Release</li>
+</ul>
+</li>
+</ul>
+<p>贡献:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://github.com/jeverling">jeverling</a></li>
+<li><a class="reference external" href="https://github.com/tang0th">tang0th</a></li>
+<li><a class="reference external" href="https://github.com/akhenakh">Fabrice Aneche</a></li>
+<li><a class="reference external" href="https://github.com/thoradam">Thor Adam</a></li>
+<li><a class="reference external" href="https://github.com/jarus">Christoph Herr</a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  
+    <a href="http://github.com/dcrosta/flask-pymongo"><img style="position: fixed; top: 0; right: 0; border: 0;"
+    src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+  
+
+  
+  </div>
+  
+
+  </body>
+</html>
